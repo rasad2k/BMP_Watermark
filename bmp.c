@@ -114,7 +114,6 @@ unsigned char * watermark(unsigned char * image, unsigned char * header, unsigne
 	unsigned char * morse = morseWord(text); //gets morse code of the text
 	int size = 10 * strlen(morse); 
 	unsigned char * tmp = (unsigned char *)malloc(size * sizeof(char)); //creates tmp string to store values of image from index up to index+size
-	printf("%s\n", morse);
 	for (int i = 0; i < size; ++i){
 		tmp[i] = image[index + i]; //fills tmp with the values of the image
 	}

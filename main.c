@@ -9,12 +9,11 @@ int main(int argc, char const *argv[])
 	rewind(fp);
 	unsigned char * image = readImageHex(fp, size + 54);
 	unsigned char * result = (unsigned char *)malloc((size +54) * sizeof(char));
-	result = watermark(image, header, "000000", 10, 20, "");
+	result = watermark(image, header, "FFFF4F", 10, 20, getDate());
 	FILE * fw = fopen("modsign.bmp", "wb");
 	fwrite(result, 1, size + 54, fw);
 
 	free(result);
 	free(header);
-	printf("%s\n", getDate());
 	return 0;
 }
