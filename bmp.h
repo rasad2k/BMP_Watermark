@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
+#include <unistd.h>
 
 int getImageSize(unsigned char * header);
 unsigned char * readHeaderHex(FILE * fp);

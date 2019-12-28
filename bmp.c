@@ -95,6 +95,16 @@ void printHeader(unsigned char * header, int size)
 	}
 }
 
+char * getDate()
+{
+	char * res = (char *)malloc(100 * sizeof(char));
+	FILE * fp = popen("date", "r");
+	fgets(res, 100, fp);
+	res[strlen(res) - 1] = '\0';
+	pclose(fp);
+	return res;
+}
+
 //watermarks the given image with the morse code of the given text,
 //with the given color on the given position x, y 
 unsigned char * watermark(unsigned char * image, unsigned char * header, unsigned char * color, int posX, int posY, char * text)

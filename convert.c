@@ -19,7 +19,18 @@ unsigned char * morseWord(unsigned char * text)
             res = concat(res, num[index]);
             res = concat(res, " ");
             continue;
-        } 
+        }
+		if (*text == ':'){
+			index = 0;
+			res = concat(res, symbol[index]);
+			res = concat(res, " ");
+			continue;
+		} else if (*text == '+'){
+			index = 1;
+			res = concat(res, symbol[index]);
+			res = concat(res, " ");
+			continue;
+		}
 
 		if (*text < 97)
 			index = *text - 'A'; //to get alphabetic index, we minus 'a' or 'A'
