@@ -4,7 +4,7 @@
 // converts regular text to morse code
 unsigned char * morseWord(unsigned char * text)
 {
-	int size = strlen(text); //size of original text;
+	int size = strlen(text); //size of original text
 	unsigned char * res = (char *)malloc((10 * size) * sizeof(char));
 	for (; *text != '\0'; text++)
 	{
@@ -36,10 +36,10 @@ unsigned char * morseWord(unsigned char * text)
 			index = *text - 'A'; //to get alphabetic index, we minus 'a' or 'A'
 		else 
 			index = *text - 'a';
-
 		res = concat(res, alpha[index]); //concatanates result with morse code of letter
 		res = concat(res, " "); //puts 'space' after each letter's morse code
 	}
+	res = concat(res, "\0");
 	return res;
 }
 
@@ -97,6 +97,7 @@ unsigned char *concat(unsigned char * str1, unsigned char * str2)
 		*(str+i) = str1[i];
 	for (int i = 0; i < strlen(str2); i++)
 		*(str+strlen(str1)+i) = str2[i];
+	str[size - 1] = '\0';
 	return str;
 }
 
@@ -105,12 +106,15 @@ unsigned char * convertEndian(unsigned char * string)
 {
 	int size = strlen(string);
 	unsigned char * result = (unsigned char *)malloc((size + 1) * sizeof(char));
+	int i = 0;
 	for (; *string != '\0'; string += 2)
 	{
 		result[size - 2] = *string;
 		result[size - 1] = *(string + 1);
 		size -= 2;
+		i += 2;
 	}
+	result[i] = '\0';
 	return result;
 }
 
@@ -129,5 +133,6 @@ unsigned char * stringToHex(unsigned char * string)
 		result[k] = (unsigned char)n;
 		k++;
 	}
+	result[k] = '\0';
 	return result;
 }

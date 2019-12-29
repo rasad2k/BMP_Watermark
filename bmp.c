@@ -1,20 +1,55 @@
 #include "bmp.h"
 #include "convert.c"
 
-//reads file header from given file as a hexadecimal string
-unsigned char * readHeaderHex(FILE * fp)
+
+//reads info header
+unsigned char * readInfoHeader(FILE * fp)
 {
-	unsigned char * header = (unsigned char *)malloc(54 * sizeof(char));
-	fread(header, 1, 54, fp);
-	return header;	
+	unsigned char * infoHeader = (unsigned char *)malloc(15 * sizeof(char));
+	fread(infoHeader, 1, 14, fp);
+	infoHeader[14] = '\0';
+	unsigned char * res = (unsigned char *)malloc(29 * sizeof(char));
+	string2hexString(infoHeader, res, 14);
+	return res;
 }
 
-//converts hexadecimal string header to regular string header
-unsigned char * readHeaderString(unsigned char * header)
+//gets total size of headers
+int getHeaderSize(unsigned char * header)
 {
+	char * headerSize = (char *)malloc(9 * sizeof(char));
+	for (int i = 0; i < 8; i += 2)
+	{
+		headerSize[i] = header[i + 20];
+		headerSize[i + 1] = header[i + 21];
+	}
+	headerSize[8] = '\0';
+	headerSize = convertEndian(headerSize);
+	int size = hexToInt(headerSize);
+	return size;	
+}
 
-	unsigned char * headerString = (unsigned char *)malloc(109 * sizeof(char));
-	string2hexString(header, headerString, 54);
+int bytesPerPixel(unsigned char * header)
+{
+	unsigned char * bpp = (unsigned char *)malloc(5 * sizeof(char));
+	for (int i = 0; i < 4; i += 2)
+	{
+		bpp[i] = header[i + 56];
+		bpp[i + 1] = header[i + 57];
+	}
+	bpp[4] = '\0';
+	bpp = convertEndian(bpp);
+	int res = hexToInt(bpp);
+	return res;	
+}
+
+//reads header as a string
+unsigned char * readHeader(FILE * fp, int headerSize)
+{
+	unsigned char * header = (unsigned char *)malloc((headerSize + 1) * sizeof(char));
+	fread(header, 1, headerSize, fp);
+	header[headerSize] = '\0';
+	unsigned char * headerString = (unsigned char *)malloc((headerSize * 2 + 1) * sizeof(char));
+	string2hexString(header, headerString, headerSize);
 	return headerString;
 }
 
@@ -37,13 +72,13 @@ unsigned char * readImageString(unsigned char * image, int size)
 //gets image width from given header
 int getWidth(unsigned char * header)
 {
-	int size = 0;
 	unsigned char * charWidth = (unsigned char *)malloc(9 * sizeof(char));
 	for (int i = 0; i < 8; i += 2)
 	{
 		charWidth[i] = header[i + 36];
 		charWidth[i + 1] = header[i + 37];
 	}
+	charWidth[8] = '\0';
  	charWidth = convertEndian(charWidth);
  	int width = hexToInt(charWidth);
  	return width;
@@ -52,7 +87,6 @@ int getWidth(unsigned char * header)
 //gets image height from given header
 int getHeight(unsigned char * header)
 {
-	int size = 0;
 	unsigned char * charHeight = (unsigned char *)malloc(9 * sizeof(char));
 
 	for (int i = 0; i < 8; i += 2)
@@ -60,6 +94,7 @@ int getHeight(unsigned char * header)
 		charHeight[i] = header[i + 44];
 		charHeight[i + 1] = header[i + 45];
  	}
+ 	charHeight[8] = '\0';
  	charHeight = convertEndian(charHeight);
  	int height = hexToInt(charHeight);
  	return height;
@@ -68,27 +103,32 @@ int getHeight(unsigned char * header)
 //gets image size from given header
 int getImageSize(unsigned char * header)
 {
-	int height = getHeight(header);
-	int width = getWidth(header);
- 	return width * height * 3;
+	unsigned char * imageSize = (unsigned char *)malloc(9 * sizeof(char));
+	for (int i = 0; i < 8; i += 2)
+	{
+		imageSize[i] = header[i + 4];
+		imageSize[i + 1] = header[i + 5];
+	}
+	imageSize[8] = '\0';
+	imageSize = convertEndian(imageSize);
+	int size = hexToInt(imageSize);
+	return size;
 }
 
 //prints hexadecimal values of regular string image
 void printImage(unsigned char * image, int size)
 {
-	int k = 0;
-	for (int i = 0; i < 2 * size; i+=2)
+	for (int i = 0; i < size; i++)
 	{
-		printf("[%d]: %c%c\n", k, image[i], image[i+1]);
-		k++;
+		printf("[%d]: %02X\n", i, image[i]);
 	}	
 }
 
 //prints hexadecimal values of regular string header
-void printHeader(unsigned char * header, int size)
+void printHeader(unsigned char * header, int headerSize)
 {
 	int j = 0;
-	for (int i = 0; i < 108; i+=2)
+	for (int i = 0; i < headerSize; i+=2)
 	{
 		printf("[%d]: %c%c\n", j, header[i], header[i+1]);
 		j++;
@@ -109,18 +149,33 @@ char * getDate()
 //with the given color on the given position x, y 
 unsigned char * watermark(unsigned char * image, unsigned char * header, unsigned char * color, int posX, int posY, char * text)
 {
+	int bpp = bytesPerPixel(header);
+	int gap;
+	int byteNumber = bpp / 8;
+	if( byteNumber == 3)
+		gap = 0;
+	else 
+		gap = 1;
+	int width;
+	int headerSize = getHeaderSize(header);
+	if(((getWidth(header) * byteNumber) % 4) != 0)
+		width = getWidth(header) * byteNumber + (4 - (getWidth(header) * byteNumber) % 4);
+	else 
+		width = getWidth(header) * byteNumber;
 	unsigned char * littleColor = convertEndian(color); //convert Big-endian color to Little-endian color
-	int index = ((getHeight(header) - posY - 1) * getWidth(header) + posX) * 3 + 54; // gets index of the the pixel on the position posX, posY
-	unsigned char * morse = morseWord(text); //gets morse code of the text
-	int size = 10 * strlen(morse); 
+	int index = (getHeight(header) - posY - 1) * width + posX * byteNumber + headerSize; // gets index of the the pixel on the position posX, posY
+	
+	unsigned char * morse = (unsigned char *)malloc(15 * strlen(text) * sizeof(char));
+	morse = morseWord(text); //gets morse code of the text
+	int size =  15 * strlen(morse); 
 	unsigned char * tmp = (unsigned char *)malloc(size * sizeof(char)); //creates tmp string to store values of image from index up to index+size
 	for (int i = 0; i < size; ++i){
 		tmp[i] = image[index + i]; //fills tmp with the values of the image
 	}
-
 	unsigned char * tmp1 = (unsigned char *)malloc(2 * size * sizeof(char)); 
 	string2hexString(tmp, tmp1, size); //converts hexadecimal string tmp to regular string tmp1
 	int tmpIndex = 0;
+	printf("%s\n", morse);
 	for (; *morse != '\0'; morse++)
 	{
 		switch (*morse)
@@ -130,7 +185,7 @@ unsigned char * watermark(unsigned char * image, unsigned char * header, unsigne
 				{
 					tmp1[tmpIndex + i]= littleColor[i];
 				}
-				tmpIndex += 12; //to update index and to skip 1 backgroung pixel
+				tmpIndex += (6 + gap * 2) * 2; //to update index and to skip 1 backgroung pixel
 				break;
 			case '-':
 				for (int i = 0; i < 3; ++i)
@@ -139,22 +194,21 @@ unsigned char * watermark(unsigned char * image, unsigned char * header, unsigne
 					{
 						tmp1[tmpIndex + j] = littleColor[j];
 					}
-					tmpIndex += 6; //to update index
+					tmpIndex += 6 + gap * 2; //to update index
 				}
-				tmpIndex += 6; //to skip 1 background pixel
+				tmpIndex += 6 + (gap * 2); //to skip 1 background pixel
 				break;
 			case ' ':
-				tmpIndex += 12; //to skip 3 backgroud pixel, 12 instead of 18 cause '.' or '-' already skips 1
+				tmpIndex += (6 + (gap * 2)) * 2; //to skip 3 backgroud pixel, 12 instead of 18 cause '.' or '-' already skips 1
 				break;
 			case '\n':
-				tmpIndex += 24; //to skip 5 background pixel, 24 instead of 24 cause '.' or '-' already skips 1
+				tmpIndex += (6 + (gap * 2)) * 4; //to skip 5 background pixel, 24 instead of 24 cause '.' or '-' already skips 1
 				break;
 			default: break;
 		}
 	}
 
 	tmp = stringToHex(tmp1); //reconvert regular string tmp1 to hexadecimal string tmp
-
 
 	for (int i = 0; i < size; ++i)
 	{
