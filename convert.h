@@ -6,6 +6,9 @@
 #include <string.h>
 #include <math.h>
 
+int strToInt (char * str);
+char * addQuotMark(char * str);
+char * removeQuotMark(char * str);
 unsigned char * morseWord(unsigned char * text);
 unsigned char *concat(unsigned char * str1, unsigned char * str2);
 void string2hexString(unsigned char* input,unsigned char* output, int size);

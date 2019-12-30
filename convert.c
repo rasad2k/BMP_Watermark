@@ -1,6 +1,46 @@
 #include "convert.h"
 #include "morse.c"
 
+//converts string to int
+int strToInt (char * str)
+{
+	int result = 0;
+	for (int i = 0; i < strlen(str); i++){
+		result *= 10;
+		result += str[i] - '0';
+	}
+	return result;
+}
+
+//adds quotation marks to string
+char * addQuotMark(char * str)
+{
+	int size = strlen(str) + 3;
+	char * res = (char *)malloc(size * sizeof(char));
+	res[0] = '"';
+	res[size - 2] = '"';
+	res[size - 1] = '\0';
+	for (int i = 0; i < size - 3; ++i)
+	{
+		res[i + 1] = str[i];
+	}
+	return res;
+}
+
+//removes quotation marks from string
+char * removeQuotMark(char * str)
+{
+	int size = strlen(str) - 1;
+	char * res = (char *)malloc(size * sizeof(char));
+	for (int i = 0; i < size - 1; ++i)
+	{
+		res[i] = str[i + 1];
+	}
+	res[size - 1] = '\0';
+
+	return res;
+}
+
 // converts regular text to morse code
 unsigned char * morseWord(unsigned char * text)
 {

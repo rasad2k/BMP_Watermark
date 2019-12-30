@@ -13,7 +13,7 @@ unsigned char * readInfoHeader(FILE * fp)
 	return res;
 }
 
-//gets total size of headers
+//gets the total size of headers
 int getHeaderSize(unsigned char * header)
 {
 	char * headerSize = (char *)malloc(9 * sizeof(char));
@@ -28,7 +28,8 @@ int getHeaderSize(unsigned char * header)
 	return size;	
 }
 
-int bytesPerPixel(unsigned char * header)
+//gets how many bytes per pixel were used
+int bitsPerPixel(unsigned char * header)
 {
 	unsigned char * bpp = (unsigned char *)malloc(5 * sizeof(char));
 	for (int i = 0; i < 4; i += 2)
@@ -48,9 +49,9 @@ unsigned char * readHeader(FILE * fp, int headerSize)
 	unsigned char * header = (unsigned char *)malloc((headerSize + 1) * sizeof(char));
 	fread(header, 1, headerSize, fp);
 	header[headerSize] = '\0';
-	unsigned char * headerString = (unsigned char *)malloc((headerSize * 2 + 1) * sizeof(char));
-	string2hexString(header, headerString, headerSize);
-	return headerString;
+	unsigned char * res = (unsigned char *)malloc((headerSize * 2 + 1) * sizeof(char));
+	string2hexString(header, res, headerSize);
+	return res;
 }
 
 //reads image as hexadecimal string
@@ -135,6 +136,7 @@ void printHeader(unsigned char * header, int headerSize)
 	}
 }
 
+//gets the output of linux command 'date'
 char * getDate()
 {
 	char * res = (char *)malloc(100 * sizeof(char));
@@ -149,13 +151,13 @@ char * getDate()
 //with the given color on the given position x, y 
 unsigned char * watermark(unsigned char * image, unsigned char * header, unsigned char * color, int posX, int posY, char * text)
 {
-	int bpp = bytesPerPixel(header);
+	int bpp = bitsPerPixel(header); //gets the value of bits per pixel
 	int gap;
 	int byteNumber = bpp / 8;
-	if( byteNumber == 3)
-		gap = 0;
+	if( byteNumber == 3) //checks how many bytes per pixel image has
+		gap = 0; //if 3, then it doesn't take transparency into the account, therefore gap is 0
 	else 
-		gap = 1;
+		gap = 1; //else, if it has 4, then it takes transparency into the account, therefore gap is 0
 	int width;
 	int headerSize = getHeaderSize(header);
 	if(((getWidth(header) * byteNumber) % 4) != 0)
@@ -175,26 +177,27 @@ unsigned char * watermark(unsigned char * image, unsigned char * header, unsigne
 	unsigned char * tmp1 = (unsigned char *)malloc(2 * size * sizeof(char)); 
 	string2hexString(tmp, tmp1, size); //converts hexadecimal string tmp to regular string tmp1
 	int tmpIndex = 0;
-	printf("%s\n", morse);
 	for (; *morse != '\0'; morse++)
 	{
 		switch (*morse)
 		{
 			case '.':
+			tmpIndex += gap * 2;
 				for (int i = 0; i < 6; ++i)
 				{
 					tmp1[tmpIndex + i]= littleColor[i];
 				}
-				tmpIndex += (6 + gap * 2) * 2; //to update index and to skip 1 backgroung pixel
+				tmpIndex += (6 + gap) * 2; //to update index and to skip 1 backgroung pixel
 				break;
 			case '-':
 				for (int i = 0; i < 3; ++i)
 				{
+					tmpIndex += gap * 2;
 					for (int j = 0; j < 6; ++j)
 					{
 						tmp1[tmpIndex + j] = littleColor[j];
 					}
-					tmpIndex += 6 + gap * 2; //to update index
+					tmpIndex += 6; //to update index
 				}
 				tmpIndex += 6 + (gap * 2); //to skip 1 background pixel
 				break;

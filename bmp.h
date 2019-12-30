@@ -10,7 +10,7 @@
 
 unsigned char * readInfoHeader(FILE * fp);
 int getHeaderSize(unsigned char * header);
-int bytesPerPixel(unsigned char * header);
+int bitsPerPixel(unsigned char * header);
 int getImageSize(unsigned char * header);
 unsigned char * readHeader(FILE * fp, int headerSize);
 void printImage(unsigned char * image, int size);
