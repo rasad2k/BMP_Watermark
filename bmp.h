@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 unsigned char * readInfoHeader(FILE * fp);
+char checkFile(unsigned char * header);
 int getHeaderSize(unsigned char * header);
 int bitsPerPixel(unsigned char * header);
 int getImageSize(unsigned char * header);

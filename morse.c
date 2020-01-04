@@ -44,5 +44,6 @@ unsigned char *num[] = {
 
 unsigned char *symbol[] = {
     "---...", // :
-    ".-.-.",  // + 
+    ".-.-.",  // +
+    "-....-", // -
 };

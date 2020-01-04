@@ -7,13 +7,11 @@
 #include <math.h>
 
 int strToInt (char * str);
-char * addQuotMark(char * str);
-char * removeQuotMark(char * str);
 unsigned char * morseWord(unsigned char * text);
-unsigned char *concat(unsigned char * str1, unsigned char * str2);
-void string2hexString(unsigned char* input,unsigned char* output, int size);
-unsigned char * convertEndian(unsigned char * string);
+void hexToStr(unsigned char* input,unsigned char* output, int size);
 int hexToInt(unsigned char * hex);
+unsigned char *concat(unsigned char * str1, unsigned char * str2);
+unsigned char * convertEndian(unsigned char * string);
 unsigned char * stringToHex(unsigned char * string);
 
 #endif

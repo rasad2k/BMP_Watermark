@@ -12,89 +12,78 @@ int strToInt (char * str)
 	return result;
 }
 
-//adds quotation marks to string
-char * addQuotMark(char * str)
-{
-	int size = strlen(str) + 3;
-	char * res = (char *)malloc(size * sizeof(char));
-	res[0] = '"';
-	res[size - 2] = '"';
-	res[size - 1] = '\0';
-	for (int i = 0; i < size - 3; ++i)
-	{
-		res[i + 1] = str[i];
-	}
-	return res;
-}
-
-//removes quotation marks from string
-char * removeQuotMark(char * str)
-{
-	int size = strlen(str) - 1;
-	char * res = (char *)malloc(size * sizeof(char));
-	for (int i = 0; i < size - 1; ++i)
-	{
-		res[i] = str[i + 1];
-	}
-	res[size - 1] = '\0';
-
-	return res;
-}
-
 // converts regular text to morse code
 unsigned char * morseWord(unsigned char * text)
 {
 	int size = strlen(text); //size of original text
 	unsigned char * res = (char *)malloc((10 * size) * sizeof(char));
+	int index;
 	for (; *text != '\0'; text++)
 	{
-		int index;
         if (*text == ' '){ //for texts with more than one word
             res = concat(res, "\n"); //if there is a new word, puts 'new line' to result
             continue;
         }
 
-        if (*text <= '9'){ //if it's a number
+        if (*text >= '0' && *text <= '9'){ //if it's a number
             index = *text - '0';
-            res = concat(res, num[index]);
-            res = concat(res, " ");
+            res = concat(res, num[index]); //concatanates result with morse code of number
+            if (*(text + 1) != ' ' && *(text + 1) != '\0')
+	            res = concat(res, " "); //puts 'space' after each number's morse code
             continue;
         }
-		if (*text == ':'){
+		if (*text == ':'){ //if it's a symbol
 			index = 0;
-			res = concat(res, symbol[index]);
-			res = concat(res, " ");
+			res = concat(res, symbol[index]); //concatanates result with morse code of symbol
+			if (*(text + 1) != ' ' && *(text + 1) != '\0')
+	        	res = concat(res, " "); //puts 'space' after each symbol's morse code
 			continue;
 		} else if (*text == '+'){
 			index = 1;
-			res = concat(res, symbol[index]);
-			res = concat(res, " ");
+			res = concat(res, symbol[index]); //concatanates result with morse code of symbol
+			if (*(text + 1) != ' ' && *(text + 1) != '\0')
+	        	res = concat(res, " "); //puts 'space' after each symbol's morse code
+			continue;
+		} else if (*text == '-'){
+			index = 2;
+			res = concat(res, symbol[index]); //concatanates result with morse code of symbol
+			if (*(text + 1) != ' ' && *(text + 1) != '\0')
+	        	res = concat(res, " "); //puts 'space' after each symbol's morse code
 			continue;
 		}
 
-		if (*text < 97)
+		if (*text >= 65 && *text <= 90){
 			index = *text - 'A'; //to get alphabetic index, we minus 'a' or 'A'
-		else 
+			res = concat(res, alpha[index]); //concatanates result with morse code of letter
+			if (*(text + 1) != ' ' && *(text + 1) != '\0')
+	        	res = concat(res, " "); //puts 'space' after each letter's morse code
+			continue;
+		}
+		else if (*text >= 97 && *text <= 122){
 			index = *text - 'a';
-		res = concat(res, alpha[index]); //concatanates result with morse code of letter
-		res = concat(res, " "); //puts 'space' after each letter's morse code
+			res = concat(res, alpha[index]); //concatanates result with morse code of letter
+			if (*(text + 1) != ' ' && *(text + 1) != '\0')
+	        	res = concat(res, " "); //puts 'space' after each letter's morse code
+			continue;
+		}
+		return 0;
 	}
-	res = concat(res, "\0");
+	res[strlen(res)] = '\0';
 	return res;
 }
 
 //converts hexadecimal string to regular string
-void string2hexString(unsigned char* input,unsigned char* output, int size)
+void hexToStr(unsigned char* input,unsigned char* output, int size)
 {
-    int i = 0; 
+    int k = 0; 
       
-    for (int loop = 0; loop < size; loop++)
+    for (int i = 0; i < size; i++)
     {
-        sprintf((output + i), "%02X", input[loop]);
-        i += 2;
+        sprintf((output + k), "%02X", input[i]);
+        k += 2;
     }
     //insert NULL at the end of the output string
-    output[i++] = '\0';
+    output[k++] = '\0';
 }
 
 //converts hexadecimal string to integer
@@ -111,15 +100,15 @@ int hexToInt(unsigned char * hex)
  
         if(hex[i]>='0' && hex[i]<='9')
         {
-            val = hex[i] - 48;
+            val = hex[i] - 48; //to get int value, we minus ASCII code of '0'
         }
         else if(hex[i]>='a' && hex[i]<='f')
         {
-            val = hex[i] - 97 + 10;
+            val = hex[i] - 97 + 10; //we minus ASCII code of 'a'
         }
         else if(hex[i]>='A' && hex[i]<='F')
         {
-            val = hex[i] - 65 + 10;
+            val = hex[i] - 65 + 10; //we minus ASCII code of 'A'
         }
 
         decimal += val * pow(16, len);
@@ -131,8 +120,8 @@ int hexToInt(unsigned char * hex)
 //concatanates 2 strings
 unsigned char *concat(unsigned char * str1, unsigned char * str2)
 {
-	int size = strlen(str1) + strlen(str2) + 1;
-	unsigned char * str = (char *)malloc(size * sizeof(char));
+	int size = strlen(str1) + strlen(str2) + 1; 
+	unsigned char * str = (char *)malloc(size * sizeof(char)); //allocates space with the size of sum of 2 input strings
 	for (int i = 0; i < strlen(str1); i++)
 		*(str+i) = str1[i];
 	for (int i = 0; i < strlen(str2); i++)

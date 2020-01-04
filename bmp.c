@@ -9,18 +9,28 @@ unsigned char * readInfoHeader(FILE * fp)
 	fread(infoHeader, 1, 14, fp);
 	infoHeader[14] = '\0';
 	unsigned char * res = (unsigned char *)malloc(29 * sizeof(char));
-	string2hexString(infoHeader, res, 14);
+	hexToStr(infoHeader, res, 14); //converts hex string INFOHEADER to regular string
 	return res;
 }
 
-//gets the total size of headers
+//checks if the given file is BMP file
+char checkFile(unsigned char * header)
+{
+	char tmp[4];
+	for (int i = 0; i < 4; ++i)
+	{
+		tmp[i] = header[i];	//reads 2 hexadecimal bytes (4 characters in this case) starting from 0th byte
+	}
+	return strcmp(tmp, "424D"); //if the given file is starting with '42 4D', it means it's BMP file and returns 0, otherwise some '-' or '+' values
+}
+
+//gets the total size of headers, also known as offset
 int getHeaderSize(unsigned char * header)
 {
 	char * headerSize = (char *)malloc(9 * sizeof(char));
-	for (int i = 0; i < 8; i += 2)
+	for (int i = 0; i < 8; i++)
 	{
-		headerSize[i] = header[i + 20];
-		headerSize[i + 1] = header[i + 21];
+		headerSize[i] = header[i + 20]; //reads 4 hexadecimal bytes (8 characters in this case) starting from 10th (20/2) byte
 	}
 	headerSize[8] = '\0';
 	headerSize = convertEndian(headerSize);
@@ -32,10 +42,9 @@ int getHeaderSize(unsigned char * header)
 int bitsPerPixel(unsigned char * header)
 {
 	unsigned char * bpp = (unsigned char *)malloc(5 * sizeof(char));
-	for (int i = 0; i < 4; i += 2)
+	for (int i = 0; i < 4; i++)
 	{
-		bpp[i] = header[i + 56];
-		bpp[i + 1] = header[i + 57];
+		bpp[i] = header[i + 56]; //reads 2 hexadecimal bytes (4 characters in this case) starting from 28th (56/2) byte
 	}
 	bpp[4] = '\0';
 	bpp = convertEndian(bpp);
@@ -50,7 +59,7 @@ unsigned char * readHeader(FILE * fp, int headerSize)
 	fread(header, 1, headerSize, fp);
 	header[headerSize] = '\0';
 	unsigned char * res = (unsigned char *)malloc((headerSize * 2 + 1) * sizeof(char));
-	string2hexString(header, res, headerSize);
+	hexToStr(header, res, headerSize);
 	return res;
 }
 
@@ -62,22 +71,13 @@ unsigned char * readImageHex(FILE * fp, int size)
 	return image;
 }
 
-//converts hexadecimal string image to regular string image
-unsigned char * readImageString(unsigned char * image, int size)
-{
-	unsigned char * imageString = (unsigned char *)malloc((size * 2 + 1) * sizeof(char));
-	string2hexString(image, imageString, size);
-	return imageString;
-}
-
 //gets image width from given header
 int getWidth(unsigned char * header)
 {
 	unsigned char * charWidth = (unsigned char *)malloc(9 * sizeof(char));
-	for (int i = 0; i < 8; i += 2)
+	for (int i = 0; i < 8; i++)
 	{
-		charWidth[i] = header[i + 36];
-		charWidth[i + 1] = header[i + 37];
+		charWidth[i] = header[i + 36]; //reads 4 hexadecimal bytes (8 characters in this case) starting from 18 (36/2) byte
 	}
 	charWidth[8] = '\0';
  	charWidth = convertEndian(charWidth);
@@ -90,10 +90,9 @@ int getHeight(unsigned char * header)
 {
 	unsigned char * charHeight = (unsigned char *)malloc(9 * sizeof(char));
 
-	for (int i = 0; i < 8; i += 2)
+	for (int i = 0; i < 8; i++)
 	{
-		charHeight[i] = header[i + 44];
-		charHeight[i + 1] = header[i + 45];
+		charHeight[i] = header[i + 44]; //reads 4 hexadecimal bytes (8 characters in this case) starting from 22th (44/2) byte
  	}
  	charHeight[8] = '\0';
  	charHeight = convertEndian(charHeight);
@@ -105,10 +104,9 @@ int getHeight(unsigned char * header)
 int getImageSize(unsigned char * header)
 {
 	unsigned char * imageSize = (unsigned char *)malloc(9 * sizeof(char));
-	for (int i = 0; i < 8; i += 2)
+	for (int i = 0; i < 8; i++)
 	{
-		imageSize[i] = header[i + 4];
-		imageSize[i + 1] = header[i + 5];
+		imageSize[i] = header[i + 4]; //reads 4 hexadecimal bytes (8 characters in this case) starting from 2 (4/2) byte
 	}
 	imageSize[8] = '\0';
 	imageSize = convertEndian(imageSize);
@@ -147,6 +145,51 @@ char * getDate()
 	return res;
 }
 
+int getReservedSize(unsigned char * morse)
+{
+	int n = 0;
+	for (int i = 0; morse[i] != '\0' ; i++)
+	{
+		if(morse[i] == '.'){
+			if(morse[i + 1] == '-' || morse[i + 1] == '.'){
+				n += 2;
+				continue;
+			}
+			if(morse[i + 1] == ' '){
+				n += 4;
+				continue;
+			}
+			if(morse[i + 1] == '\n'){
+				n += 6;
+				continue;
+			}
+			if(morse[i + 1] == '\0'){
+				n++;
+				continue;
+			}
+		}
+		else if(morse[i] == '-'){
+			if(morse[i + 1] == '-' || morse[i + 1] == '.'){
+				n += 4;
+				continue;
+			}
+			if(morse[i + 1] == ' '){
+				n += 6;
+				continue;
+			}
+			if(morse[i + 1] == '\n'){
+				n += 8;
+				continue;
+			}
+			if(morse[i + 1] == '\0'){
+				n += 3;
+				continue;
+			}
+		}
+	}
+	return n;
+}
+
 //watermarks the given image with the morse code of the given text,
 //with the given color on the given position x, y 
 unsigned char * watermark(unsigned char * image, unsigned char * header, unsigned char * color, int posX, int posY, char * text)
@@ -158,7 +201,8 @@ unsigned char * watermark(unsigned char * image, unsigned char * header, unsigne
 		gap = 0; //if 3, then it doesn't take transparency into the account, therefore gap is 0
 	else 
 		gap = 1; //else, if it has 4, then it takes transparency into the account, therefore gap is 0
-	int width;
+	
+	int width;	
 	int headerSize = getHeaderSize(header);
 	if(((getWidth(header) * byteNumber) % 4) != 0)
 		width = getWidth(header) * byteNumber + (4 - (getWidth(header) * byteNumber) % 4);
@@ -166,16 +210,24 @@ unsigned char * watermark(unsigned char * image, unsigned char * header, unsigne
 		width = getWidth(header) * byteNumber;
 	unsigned char * littleColor = convertEndian(color); //convert Big-endian color to Little-endian color
 	int index = (getHeight(header) - posY - 1) * width + posX * byteNumber + headerSize; // gets index of the the pixel on the position posX, posY
-	
-	unsigned char * morse = (unsigned char *)malloc(15 * strlen(text) * sizeof(char));
+	unsigned char * morse = (unsigned char *)malloc(20 * strlen(text) * sizeof(char));
+
 	morse = morseWord(text); //gets morse code of the text
-	int size =  15 * strlen(morse); 
+	if (morse == 0) //if text couldn't be translated to Morse code, returns "morseErr"
+	{
+		return "morseErr";
+	}
+	int size =  (getReservedSize(morse) + 2) * 3;
+	if (index + size > getImageSize(header)){ //if text has to be written at the end of the image, return "sizeOverflow"
+		return "sizeOverflow";
+	}
+	size *= 2;
 	unsigned char * tmp = (unsigned char *)malloc(size * sizeof(char)); //creates tmp string to store values of image from index up to index+size
 	for (int i = 0; i < size; ++i){
 		tmp[i] = image[index + i]; //fills tmp with the values of the image
 	}
 	unsigned char * tmp1 = (unsigned char *)malloc(2 * size * sizeof(char)); 
-	string2hexString(tmp, tmp1, size); //converts hexadecimal string tmp to regular string tmp1
+	hexToStr(tmp, tmp1, size); //converts hexadecimal string tmp to regular string tmp1
 	int tmpIndex = 0;
 	for (; *morse != '\0'; morse++)
 	{
