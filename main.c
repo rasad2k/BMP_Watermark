@@ -61,6 +61,12 @@ int main(int argc, char *argv[])
 		}
 		n++;
 	}
+
+	if(strcmp(color, "") == 0){
+		printf("You must enter color!\n");
+		return 1;
+	}
+
 	FILE * fp = fopen(filename, "rb");
 	if(fp == NULL){
 		printf("Couldn't open the given file, file might be invalid or you might not have access to open it.\n");
@@ -90,10 +96,12 @@ int main(int argc, char *argv[])
 	unsigned char * str = (unsigned char *)malloc(500 * sizeof(char));
 	str = "";
 	str = concat(str, text);
-	if (date != ""){
-		str = concat(str, " ");
-		str = concat(str, date);
-	}
+	if(text != ""){
+		if (date != ""){
+			str = concat(str, " ");
+			str = concat(str, date);
+		}
+	} else str = concat(str, date);
 	result = watermark(image, header, color, strToInt(posX), strToInt(posY), str);
 	if (strcmp(result, "sizeOverflow") == 0){
 		printf("Not enough space to write in this positions, try reducing X or increasing Y!\n");
