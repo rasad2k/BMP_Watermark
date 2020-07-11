@@ -1,4 +1,4 @@
-# BMP_Watermark
+# BMP Watermark
 To compile a program use **gcc main.c -o wm -lm command in terminal**.
 
 To run a program, user must give valid BMP file and color. Also, if both -date and -text are not
