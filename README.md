@@ -1,5 +1,5 @@
 # BMP_Watermark
-To compile a program use gcc main.c -o wm -lm command in terminal.
+To compile a program use **gcc main.c -o wm -lm command in terminal**.
 
 To run a program, user must give valid BMP file and color. Also, if both -date and -text are not
 available, program will output the exact input image. Note that user must give the input file name
