@@ -4,9 +4,9 @@
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;To run a program, user must give valid BMP file and color. Also, if both -date and -text are not
 available, program will output the exact input image. Note that user must give the input file name
 right after the script name, as shown in the example:
-
-**./wm sign.bmp -color FFFFAF -text "Hello world"**  
-
+```
+./wm sign.bmp -color FFFFAF -text "Hello world"
+```
 This example firstly asks for output filename to write and then it returns an image with written
 "Hello world" in Morse code, starting from position (0, 0).  
 
